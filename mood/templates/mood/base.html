@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}MoodMe{% endblock %}</title>
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik&display=swap');
+
+    body.light-theme {
+      background-color: #FFF8F2;
+      color: #333;
+    }
+
+    body.dark-theme {
+      background-color: #1e1e1e;
+      color: #f0f0f0;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Rubik', sans-serif;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    header {
+      background: linear-gradient(to right, #ebae6c, #fca41f);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+    }
+
+    .dark-theme header {
+      background: linear-gradient(to right, #444, #222);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-info img {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+    }
+
+    .user-info span {
+      font-weight: 500;
+      font-size: 16px;
+      color: #fff;
+    }
+
+    .nav-links a i {
+      font-size: 18px;
+      margin: 0 12px;
+      color: white;
+      transition: transform 0.2s;
+    }
+
+    .nav-links a:hover i {
+      transform: scale(1.2);
+      color: #ff914d;
+    }
+
+    #theme-toggle {
+      background: none;
+      border: 2px solid white;
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    main {
+      padding: 2rem;
+    }
+
+    .flash-message {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #FFAA6C;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+      z-index: 9999;
+      font-size: 15px;
+      font-weight: 500;
+      animation: fadeOut 4s forwards;
+    }
+
+    @keyframes fadeOut {
+      0%   { opacity: 1; }
+      80%  { opacity: 1; }
+      100% { opacity: 0; display: none; }
+    }
+  </style>
+</head>
+<body>
+  {% if user.is_authenticated %}
+  <header>
+    <div class="user-info">
+      {% if user.avatar %}
+        <img src="{{ user.avatar.url }}" alt="Аватар">
+      {% endif %}
+      <span>Привет, {{ user.username }}!</span>
+    </div>
+    <div class="nav-links" style="display: flex; align-items: center;">
+      <a href="{% url 'home' %}" title="Главная"><i class="fas fa-house"></i></a>
+      <a href="{% url 'history' %}" title="Календарь"><i class="fas fa-calendar-alt"></i></a>
+      <a href="{% url 'profile' %}" title="Профиль"><i class="fas fa-user"></i></a>
+      <a href="{% url 'logout' %}" title="Выйти"><i class="fas fa-right-from-bracket"></i></a>
+      <button onclick="toggleTheme()" id="theme-toggle"><i class="fas fa-moon"></i></button>
+    </div>
+  </header>
+  {% endif %}
+
+  {% if messages %}
+    <div class="flash-message">
+      {% for message in messages %}
+        {{ message }}
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <script>
+    function toggleTheme() {
+      const body = document.body;
+      const toggleBtn = document.getElementById('theme-toggle');
+      if (body.classList.contains('dark-theme')) {
+        body.classList.remove('dark-theme');
+        body.classList.add('light-theme');
+        localStorage.setItem('theme', 'light');
+        toggleBtn.innerHTML = '<i class="fas fa-moon"></i>';
+      } else {
+        body.classList.remove('light-theme');
+        body.classList.add('dark-theme');
+        localStorage.setItem('theme', 'dark');
+        toggleBtn.innerHTML = '<i class="fas fa-sun"></i>';
+      }
+    }
+
+    window.onload = () => {
+      const savedTheme = localStorage.getItem('theme') || 'light';
+      document.body.classList.add(savedTheme + '-theme');
+      document.getElementById('theme-toggle').innerHTML =
+        savedTheme === 'dark'
+          ? '<i class="fas fa-sun"></i>'
+          : '<i class="fas fa-moon"></i>';
+    };
+  </script>
+</body>
+</html>

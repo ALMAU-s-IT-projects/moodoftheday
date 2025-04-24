@@ -1,0 +1,164 @@
+{% extends 'mood/base.html' %}
+{% load extras %}
+
+{% block title %}Календарь — MoodMe{% endblock %}
+
+{% block content %}
+<h2 style="text-align:center; margin-bottom: 2rem;">Календарь эмоций</h2>
+
+<!-- Фильтр -->
+<div style="text-align:center; margin-bottom: 1.5rem;">
+  <a href="?category=all&year={{ year }}&month={{ month }}" style="margin: 0 10px; font-weight: bold; color: {% if active_category == 'all' %}#ff914d{% else %}#555{% endif %};">Все</a>
+  <a href="?category=positive&year={{ year }}&month={{ month }}" style="margin: 0 10px; font-weight: bold; color: {% if active_category == 'positive' %}#ff914d{% else %}#555{% endif %};">Позитивные</a>
+  <a href="?category=neutral&year={{ year }}&month={{ month }}" style="margin: 0 10px; font-weight: bold; color: {% if active_category == 'neutral' %}#ff914d{% else %}#555{% endif %};">Нейтральные</a>
+  <a href="?category=negative&year={{ year }}&month={{ month }}" style="margin: 0 10px; font-weight: bold; color: {% if active_category == 'negative' %}#ff914d{% else %}#555{% endif %};">Негативные</a>
+</div>
+
+<!-- Переключение месяцев -->
+<div style="text-align: center; margin-bottom: 1.5rem;">
+  <a href="?year={{ prev_year }}&month={{ prev_month }}&category={{ active_category }}" style="margin-right: 20px; text-decoration: none; font-weight: bold; color: #ff914d;">← Назад</a>
+  <span style="font-weight: bold;">{{ month_name }} {{ year }}</span>
+  <a href="?year={{ next_year }}&month={{ next_month }}&category={{ active_category }}" style="margin-left: 20px; text-decoration: none; font-weight: bold; color: #ff914d;">Вперёд →</a>
+</div>
+
+<table style="margin: auto; border-collapse: collapse; font-family: Rubik;">
+  <tr>
+    {% for day in days %}
+      <th style="padding: 10px; background: #ffe1c4; color: #333;">{{ day }}</th>
+    {% endfor %}
+  </tr>
+  {% for week in month_calendar %}
+    <tr>
+      {% for day in week %}
+        {% if day == 0 %}
+          <td style="padding: 15px; background: #f9f9f9;"></td>
+        {% else %}
+          <td onclick="openEntry({{ year }}, {{ month }}, {{ day }})"
+              title="{% for entry in entries %}{% if entry.created_at.day == day %}{{ entry.emotion.name }}{% endif %}{% endfor %}"
+              style="
+                cursor: pointer;
+                padding: 15px;
+                text-align: center;
+                border-radius: 6px;
+                background-color: {{ mood_by_day|get_item:day|default:'#fdfdfd' }};
+                border: 1px solid #eee;
+                font-weight: 500;
+                color: #333;
+                transition: 0.2s ease;
+                box-shadow: {% if mood_by_day|get_item:day %}0 2px 8px rgba(0, 0, 0, 0.08){% else %}none{% endif %};
+              "
+              onmouseover="this.style.opacity=0.9"
+              onmouseout="this.style.opacity=1"
+          >
+            {{ day }}
+          </td>
+        {% endif %}
+      {% endfor %}
+    </tr>
+  {% endfor %}
+</table>
+
+{% if not has_entries %}
+  <p style="text-align:center; color: #aaa; margin-top: 2rem;">В этом месяце пока нет ни одной эмоции.</p>
+{% endif %}
+
+<!-- Overlay -->
+<div id="overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9998;" onclick="closeModal()"></div>
+
+<!-- Popup -->
+<div id="entryModal" style="display:none; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%);
+  background:white; padding:1.5rem; border-radius:16px; box-shadow:0 8px 24px rgba(0,0,0,0.2); max-width:400px; z-index:10000;">
+  <button onclick="closeModal()" style="float:right; border:none; background:none; font-size:18px;">×</button>
+  <h3 id="modalHeader" style="cursor: move;">...</h3>
+  <img id="modalImage" style="max-width: 280px; width: 100%; height: auto; margin: 10px auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); display: none; object-fit: contain;">
+  <blockquote id="modalQuote" style="font-style: italic; margin-top:10px;"></blockquote>
+  <audio id="modalAudio" controls autoplay muted playsinline style="width: 100%; margin-top: 10px; display: none;"></audio>
+  <p id="modalNote" style="margin-top: 1rem;"></p>
+</div>
+
+<script>
+  function openEntry(year, month, day) {
+    fetch(`/entry/${year}/${month}/${day}/`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) {
+          alert("Нет записи на этот день");
+          return;
+        }
+
+        document.getElementById('modalHeader').textContent = data.emotion;
+        document.getElementById('modalNote').textContent = data.note || "(Без заметки)";
+
+        const img = document.getElementById('modalImage');
+        const audio = document.getElementById('modalAudio');
+        const quote = document.getElementById('modalQuote');
+
+        if (data.image) {
+          img.src = data.image;
+          img.style.display = "block";
+        } else {
+          img.style.display = "none";
+        }
+
+        if (data.track) {
+          audio.src = data.track;
+          audio.style.display = "block";
+          audio.muted = false;
+          audio.play().catch(() => {
+            console.log("Браузер заблокировал автозапуск.");
+          });
+        } else {
+          audio.style.display = "none";
+        }
+
+        quote.textContent = data.quote || "";
+        document.getElementById('entryModal').style.display = "block";
+        document.getElementById('overlay').style.display = "block";
+        document.body.style.overflow = "hidden";
+      });
+  }
+
+  function closeModal() {
+    document.getElementById('entryModal').style.display = "none";
+    document.getElementById('overlay').style.display = "none";
+    document.body.style.overflow = "";
+  }
+
+  // Перетаскивание попапа
+  dragElement(document.getElementById("entryModal"));
+
+  function dragElement(elmnt) {
+    const header = document.getElementById("modalHeader");
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    if (header) {
+      header.style.cursor = "move";
+      header.onmousedown = dragMouseDown;
+    }
+
+    function dragMouseDown(e) {
+      e.preventDefault();
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      document.onmouseup = closeDragElement;
+      document.onmousemove = elementDrag;
+    }
+
+    function elementDrag(e) {
+      e.preventDefault();
+      pos1 = pos3 - e.clientX;
+      pos2 = pos4 - e.clientY;
+      pos3 = e.clientX;
+      pos4 = e.clientY;
+      elmnt.style.top = (elmnt.offsetTop - pos2) + "px";
+      elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
+      elmnt.style.transform = "none";
+    }
+
+    function closeDragElement() {
+      document.onmouseup = null;
+      document.onmousemove = null;
+    }
+  }
+</script>
+{% endblock %}

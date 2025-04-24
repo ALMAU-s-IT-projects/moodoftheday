@@ -1,0 +1,98 @@
+{% extends 'mood/base.html' %}
+
+{% block title %}Профиль — MoodMe{% endblock %}
+
+{% block content %}
+  <div style="
+    max-width: 400px;
+    margin: 2rem auto;
+    background: linear-gradient(to bottom, #FFF7F1, #FFE4DB);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+    text-align: center;
+  ">
+    <h2 style="margin-bottom: 1.5rem; color: #5A4C42;">Профиль пользователя</h2>
+
+    {% if user.avatar %}
+      <img src="{{ user.avatar.url }}" alt="Аватар" style="width: 100px; height: 100px; border-radius: 50%; object-fit: cover; margin-bottom: 1rem; border: 3px solid #fff;">
+    {% endif %}
+
+    <p style="font-size: 18px; font-weight: bold; margin-bottom: 0.5rem;">@{{ user.username }}</p>
+
+    {% if user.email %}
+      <p style="font-size: 14px; color: #777;">{{ user.email }}</p>
+    {% endif %}
+
+    <p style="font-size: 13px; color: #aaa; margin-top: 1rem;">В MoodMe с {{ user.date_joined|date:"F Y" }}</p>
+
+    {% if stats %}
+      <div style="margin-top: 2.5rem;">
+        <h3 style="text-align:center; color: #5A4C42; margin-bottom: 1rem;">Твоя статистика эмоций</h3>
+        {% for item in stats %}
+          <div style="
+            background: white;
+            border-left: 8px solid {{ item.emotion__color }};
+            padding: 10px 14px;
+            margin-bottom: 0.8rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            font-size: 15px;
+            color: #444;
+          ">
+            <strong>{{ item.emotion__name }}</strong> — {{ item.total }} раз(а)
+          </div>
+        {% endfor %}
+      </div>
+
+      <div style="margin-top: 3rem;">
+        <h3 style="text-align:center; color: #5A4C42; margin-bottom: 1rem;">Диаграмма эмоций</h3>
+        <canvas id="emotionChart" width="300" height="300"></canvas>
+      </div>
+    {% else %}
+      <p style="text-align:center; margin-top: 2rem; color: #aaa;">Ещё нет данных для анализа эмоций.</p>
+    {% endif %}
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  {% if stats %}
+  <script>
+    const ctx = document.getElementById('emotionChart').getContext('2d');
+    const emotionChart = new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels: [
+          {% for item in stats %}
+            '{{ item.emotion__name }}'{% if not forloop.last %},{% endif %}
+          {% endfor %}
+        ],
+        datasets: [{
+          data: [
+            {% for item in stats %}
+              {{ item.total }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ],
+          backgroundColor: [
+            {% for item in stats %}
+              '{{ item.emotion__color }}'{% if not forloop.last %},{% endif %}
+            {% endfor %}
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              font: { size: 14 },
+              color: '#333'
+            }
+          }
+        }
+      }
+    });
+  </script>
+  {% endif %}
+{% endblock %}

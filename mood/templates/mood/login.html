@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Вход — MoodMe</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Rubik&display=swap');
+
+    body {
+      font-family: 'Rubik', sans-serif;
+      background: linear-gradient(to bottom right, #FEEAD8, #F9D7D7);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .form-box {
+      background: white;
+      padding: 2.5rem 3rem;
+      border-radius: 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+      width: 380px;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+      margin-bottom: 1.5rem;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      margin-bottom: 0.3rem;
+      font-weight: 500;
+      color: #444;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      font-size: 15px;
+      background: #fdfdfd;
+    }
+
+    button {
+      margin-top: 1.5rem;
+      width: 100%;
+      padding: 12px;
+      background: #FFAA6C;
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #F79656;
+    }
+
+    .errorlist {
+      background: #ffe4e1;
+      color: #b00000;
+      border: 1px solid #ffb3b3;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      list-style: none;
+      font-size: 14px;
+    }
+
+    .link {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    .link a {
+      color: #FF9245;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .link a:hover {
+      text-decoration: underline;
+    }
+
+    .forgot {
+      text-align: center;
+      margin-top: 1rem;
+    }
+
+    .forgot a {
+      font-size: 13px;
+      color: #888;
+      text-decoration: none;
+    }
+
+    .forgot a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-box">
+    <h2>Вход в MoodMe</h2>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+      {% for field in form %}
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {{ field.errors }}
+      {% endfor %}
+      <button type="submit">Войти</button>
+
+      <div class="forgot">
+        <a href="{% url 'password_reset' %}">Забыли пароль?</a>
+      </div>
+    </form>
+
+    <div class="link">
+      Нет аккаунта? <a href="{% url 'register' %}">Зарегистрироваться</a>
+    </div>
+  </div>
+</body>
+</html>
