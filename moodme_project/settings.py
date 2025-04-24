@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-3ba5tc-drdr=+oslqodw!d^tsc62r6x2p_*bz&c-@u4(*y^-2n'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['moodme.pythonanywhere.com']
 
 
 # Application definition
@@ -148,3 +148,7 @@ EMAIL_HOST_USER = 'otarbekaruzhan@gmail.com'  # ← твой Gmail
 EMAIL_HOST_PASSWORD = 'gwef lvzz lepl oegq'  # ← пароль приложения от Google
 
 DEFAULT_FROM_EMAIL = 'MoodMe <otarbekaruzhan@gmail.com>'
+
+import os
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
